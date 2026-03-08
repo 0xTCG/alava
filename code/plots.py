@@ -11,7 +11,7 @@ from scipy.stats import pearsonr
 import collections
 import sys
 import math
-from rpy2.robjects import r, NULL
+from rpy2.robjects import r as R, NULL
 from rpy2.robjects.packages import importr
 from rpy2.robjects import default_converter
 from rpy2.robjects.conversion import localconverter
@@ -20,10 +20,9 @@ from rpy2.robjects import pandas2ri
 
 # Parameters: T-value and p-value thresholds
 T, P = 1.64, 0.05
-RESULTS, PREFIX, INPUT, PLOTS = sys.argv[1:]
+RESULTS, PREFIX, PLOTS = sys.argv[1:]
 # RESULTS = "results/out"
 # PREFIX = f"{RESULTS}/eur/magma/hg19-qc"
-# INPUT = "data/simulations.txt"
 # PLOTS = f"{RESULTS}/plots"
 
 # PREFIX, PLOTS = "out-old/all_chr.rsq0.5_EUR_QC_annotated", "out-old/plots"
@@ -60,7 +59,7 @@ for pathway in interesting:
             [f"{m} ({pathways[m].nice_name})", md["params"], md["p"],
              f"{a} ({pathways[a].nice_name})", ad["params"], ad["p"]]
         )
-    with open(f"{PLOTS}/f5_{pathway}.txt", "w") as fo:
+    with open(f"{PLOTS}/fig5_{pathway}.txt", "w") as fo:
         print(tabulate.tabulate(table, headers=["Pathway", "ß", "p"] * 2), file=fo)
 
     alava = pd.DataFrame(r.alava).transpose()
@@ -96,7 +95,7 @@ for pathway in interesting:
         (pp | pb)
         & theme_light()
         & theme(plot_title_position="plot", aspect_ratio=1)
-    ).save(filename=f"{PLOTS}/f6_{pathway}.png")
+    ).save(filename=f"{PLOTS}/fig6_{pathway}.png")
 
 #%% Appendix: Figure 7
 p = []
@@ -104,7 +103,7 @@ for pathway in pathways:
     r = pathways[pathway]
     for g in sorted([g for g in r.gene_info.values() if g.p <= 0.0003], key=lambda x: x.p):
         p.append(g.name)
-with open(f"{PLOTS}/f7.txt", "w") as fo:
+with open(f"{PLOTS}/fig7.txt", "w") as fo:
     for n, c in collections.Counter(p).most_common():
         print(c, n, sep="\t", file=fo)
 
@@ -128,14 +127,14 @@ r_dt = data_table.as_data_table(r_df)
 
 # Import R libraries
 qqman = importr("qqman")
-r(f'png("{PLOTS}/f11.png", width=1600, height=900)')
+R(f'png("{PLOTS}/fig11.png", width=1600, height=900)')
 qqman.manhattan(
     r_dt,
     chr="CHR",
     bp="START",
     p="P",
     snp="ENTREZ",
-    col=r.c("darkcyan","darkblue","skyblue","lightblue","lightgray"),
+    col=R.c("darkcyan","darkblue","skyblue","lightblue","lightgray"),
     chrlabs=NULL,
     suggestiveline=float(-math.log10(2.9e-05)),
     genomewideline=float(-math.log10(2.8e-06)),
@@ -144,7 +143,7 @@ qqman.manhattan(
     annotatePval=0.000028,
     annotateTop=False
 )
-r("dev.off()")
+R("dev.off()")
 
 snps_df = None
 for fname in glob.glob(f"{PREFIX}.*.linear"):
@@ -158,9 +157,9 @@ with localconverter(default_converter + pandas2ri.converter):
     r_df = pandas2ri.py2rpy(snps_df)
 r_dt = data_table.as_data_table(r_df)
 
-r(f'png("{PLOTS}/f12.png", width=1200, height=1200)')
+R(f'png("{PLOTS}/fig12.png", width=1200, height=1200)')
 qqman.qq(r_dt.rx2("P"))
-r("dev.off()")
+R("dev.off()")
 
 GWASinspector = importr("GWASinspector")
 GWASinspector.manhattan_plot(
@@ -168,7 +167,7 @@ GWASinspector.manhattan_plot(
     chr="#CHROM",
     pvalue="P",
     position="POS",
-    fileName=f"{PLOTS}/f14.png",
+    fileName=f"{PLOTS}/fig14.png",
     plot_title="SNP-level Manhattan Plot",
     plot_subtitle="",
     p_threshold=0.9,
@@ -185,7 +184,7 @@ for pathway in pathways:
     for gn, g in r.gene_info.items():
         if g.p <= 2.9e-5:
             table.append((g.p, g.name, g.chr, r.nice_name))
-with open(f"{PLOTS}/f15.txt", "w") as fo:
+with open(f"{PLOTS}/fig15.txt", "w") as fo:
     print(tabulate.tabulate(
             sorted(table, key=lambda x: x[0]), headers=["p-value", "Gene", "Chromosome", "Trait"]
           ), file=fo)
@@ -196,7 +195,7 @@ for p, cnt in collections.Counter(counts).most_common():
     mean_p = np.average([r.alava[p]["p"] for r in pathways.values() if p in r.alava])
     mean_b = np.average([r.alava[p]["params"] for r in pathways.values() if p in r.alava])
     table.append((cnt, p, pathways[p].nice_name, mean_p, mean_b))
-with open(f"{PLOTS}/f16.txt", "w") as fo:
+with open(f"{PLOTS}/fig16.txt", "w") as fo:
     print(tabulate.tabulate(table, headers=["Count", "KEGG ID", "Trait", "p", "ß"]),
           file=fo)
 

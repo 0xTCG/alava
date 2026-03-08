@@ -41,7 +41,6 @@ def generate_random_simulation(overlaps, fn):
 
 fns = {
     0: (lambda v: random.uniform(0, 1.5) if v == 0 else random.uniform(2.5, 3)),
-
     # Other generator functions that can be tried:
     # 1: (lambda v: random.uniform(0, 1.5) if v == 0 else random.uniform(3, 5.5)),
     # 2: (lambda v: 0 if v == 0 else 3),
@@ -110,7 +109,7 @@ def plots(fn):
     plt.xlabel("Number of Significant Genes")
     plt.ylabel("Number of Calculated Significant Pathways")
     plt.legend(bbox_to_anchor=(1, 1))
-    plt.save(f"{PLOTS}/fig3.png")
+    plt.savefig(f"{PLOTS}/fig3.png")
 
     cols = ["#ffffff", "#f02e35", "#8fe56f", "#981534"]
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(7, 3), layout='constrained', squeeze=False)
@@ -121,7 +120,7 @@ def plots(fn):
     axs[0, 1].set_title("MAGMA")
     fig.legend(handles=[mpatches.Patch(color=cols[i], label=label) for i, label in enumerate(confusion)],
             loc='outside right')
-    plt.save(f"{PLOTS}/fig4.png")
+    plt.savefig(f"{PLOTS}/fig4.png")
 
     table = {}
     for method in ("true", "alava", "magma"):
